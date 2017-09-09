@@ -3,6 +3,7 @@ import requests
 import json
 import random
 import time
+from pymongo import MongoClient
 
 class RiotAPI(object):
 
@@ -72,6 +73,9 @@ class RiotAPI(object):
 current_key = 'RGAPI-5ae4cdb4-a46d-4f21-bf8b-39eee3c6e1c4' #Changes every day
 
 def main():
+    client = MongoClient('localhost', 27017)
+    db = client.test_database
+    collection = db.test_collection
     api = RiotAPI(current_key)
     number = random.randint(1,5)
     #number = 4
@@ -85,6 +89,7 @@ def main():
         except:
             match_data = api.get_by_id(api.matchId)
         print(match_data)
+        data = collection.insert(match_data)
         #save it
         time.sleep(1)
         api.update_random_user(match_data)
