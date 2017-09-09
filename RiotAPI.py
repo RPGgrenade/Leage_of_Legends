@@ -43,9 +43,18 @@ class RiotAPI(object):
         self.region = user['currentPlatformId']
 
     def get_random_ranked_match(self):
-        ranked_matches = self.get_by_id(self.accountId,type='User Matches')
-        matches = list(ranked_matches['matches'])
-        return random.choice(matches)
+        matches = self.get_by_id(self.accountId,type='User Matches')
+        matches_list = list(matches['matches'])
+        ranked_matches = self.filter_ranked(matches_list)
+        return random.choice(ranked_matches)
+
+    def filter_ranked(self, matches):
+        ranked = []
+        for match in matches:
+            queue = match['queue']
+            if queue in Consts.QUEUES.values():
+                ranked.append(match)
+        return ranked
 
     def get_by_id(self, id, type='Match'):
         api_url = Consts.REQUEST_TYPES[type].format(
@@ -60,7 +69,7 @@ class RiotAPI(object):
     #3. Get a random match, store its data after checking for specific data types (possibly finding out tiers)
     #4. Repeat until a certain amount of matches have been stored
 
-current_key = 'RGAPI-cc071f73-f60a-4d5c-bf52-73bcd2a92211' #Changes every day
+current_key = 'RGAPI-5ae4cdb4-a46d-4f21-bf8b-39eee3c6e1c4' #Changes every day
 
 def main():
     api = RiotAPI(current_key)

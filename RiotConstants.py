@@ -5,10 +5,12 @@ URL = {
 QUEUES = {
     'Solo-Ranked': 4,
     'Duo-Ranked': 6,
+    'Flex-Ranked': 9,
     'Team-Ranked-5v5': 42,
     'Team-Ranked-3v3': 41,
     'Ranked-Draft-5v5': 410,
     'Ranked-Solo-TeamBuilder': 420,
+    'Ranked-Flex-5v5': 440
 }
 
 REQUEST_TYPES = {
