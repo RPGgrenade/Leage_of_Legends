@@ -70,7 +70,7 @@ class RiotAPI(object):
     #3. Get a random match, store its data after checking for specific data types (possibly finding out tiers)
     #4. Repeat until a certain amount of matches have been stored
 
-current_key = 'RGAPI-5ae4cdb4-a46d-4f21-bf8b-39eee3c6e1c4' #Changes every day
+current_key = 'Insert Key Here' #Changes every day
 
 def main():
     client = MongoClient('localhost', 27017)
