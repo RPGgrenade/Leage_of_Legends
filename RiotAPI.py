@@ -12,6 +12,7 @@ class RiotAPI(object):
         self.region = region
         self.accountId = 0
         self.matchId = 0
+        self.json_name = None
 
     def _request(self, api_url, params=[]):
         args = {'api_key': self.api_key}
@@ -28,20 +29,25 @@ class RiotAPI(object):
         return response.json()
 
     def get_random_seed(self, json_name):
-        json_file = open(json_name)
+        self.json_name = json_name
+        json_file = open(self.json_name)
         json_data = json.load(json_file)
 
-        matches_list = list(json_data['matches']) #just a temp key until I find the actual term
+        matches_list = list(json_data['matches'])
         match = random.choice(matches_list) #get a random match from the list
 
         self.update_random_user(match)
 
     def update_random_user(self, match):
-        users_list = list(match['participantIdentities'])  # temp key
-        user = random.choice(users_list)['player']
+        users_list = list()
+        try:
+            users_list = list(match['participantIdentities'])
+            user = random.choice(users_list)['player']
+            self.accountId = user['accountId']
+            self.region = user['currentPlatformId']
+        except:
+            self.get_random_seed(self.json_name)
 
-        self.accountId = user['accountId']
-        self.region = user['currentPlatformId']
 
     def get_random_ranked_match(self):
         matches = self.get_by_id(self.accountId,type='User Matches')
@@ -68,9 +74,10 @@ class RiotAPI(object):
     #1. Get a random player from a random match from a random seed data file
     #2. Get the accountId & region from said user and find the ranked matches they've played (User matches in the constants)
     #3. Get a random match, store its data after checking for specific data types (possibly finding out tiers)
-    #4. Repeat until a certain amount of matches have been stored
+    #4. Repeat
+    #5. If there are no matches to find, start from the beginning and search for another random player from the seed data file
 
-current_key = 'Insert Key Here' #Changes every day
+current_key = 'API CODE HERE' #Changes every day
 
 def main():
     client = MongoClient('localhost', 27017)
@@ -90,8 +97,10 @@ def main():
             match_data = api.get_by_id(api.matchId)
         print(match_data)
         data = collection.insert(match_data)
+        print(str(db.command("collstats","test_collection")["size"]/1000000000) + " GB")
+        print(str(db.test_collection.count()) + " Matches")
         #save it
-        time.sleep(1)
+        time.sleep(0.9)
         api.update_random_user(match_data)
 
 if __name__ == '__main__':
