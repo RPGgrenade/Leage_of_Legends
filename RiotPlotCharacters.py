@@ -93,7 +93,7 @@ class PopularChampionsInRanked(MRJob):
         util_scores = [u_s for u_s in values]
         utilities = [u[0] for u in util_scores]
         scores = [s[1] for s in util_scores]
-        yield champ_id, scores
+        yield champ_id, [sum(utilities),sum(scores)]
 
     def steps(self):
         return [MRStep(mapper=self.mapper_match_champion_scores),

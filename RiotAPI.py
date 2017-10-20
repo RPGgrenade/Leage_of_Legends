@@ -78,7 +78,7 @@ class RiotAPI(object):
     #5. If there are no matches to find, start from the beginning and search for another random player from the seed data file
     #6. If you get a 403 response code run previous step (not yet implemented)
 
-current_key = 'RGAPI-3712c684-e107-47bb-b1a1-6d156afa253e' #Changes every day
+current_key = 'Insert API Key here' #Changes every day
 
 def main():
     client = MongoClient('localhost', 27017)
