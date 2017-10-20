@@ -76,8 +76,9 @@ class RiotAPI(object):
     #3. Get a random match, store its data after checking for specific data types (possibly finding out tiers)
     #4. Repeat
     #5. If there are no matches to find, start from the beginning and search for another random player from the seed data file
+    #6. If you get a 403 response code run previous step (not yet implemented)
 
-current_key = 'API CODE HERE' #Changes every day
+current_key = 'RGAPI-3712c684-e107-47bb-b1a1-6d156afa253e' #Changes every day
 
 def main():
     client = MongoClient('localhost', 27017)
@@ -87,6 +88,7 @@ def main():
     number = random.randint(1,5)
     #number = 4
     json_name = "matches" + str(number) + ".json"
+    print("Seed " + json_name)
     api.get_random_seed(json_name)
     while True:
         try:
