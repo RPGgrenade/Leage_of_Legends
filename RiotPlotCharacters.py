@@ -13,8 +13,6 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 
-champion_ids = []
-champion_scores = []
 
 class PopularChampionsInRanked(MRJob):
 
@@ -36,21 +34,21 @@ class PopularChampionsInRanked(MRJob):
             players = match['participants']
             for player in players: #there are no champion repeats in ranked games
                 stats = player['stats']
-                rank = math.pow(2, Weights.RANK[player['highestAchievedSeasonTier']])
+                rank = math.pow(6, Weights.RANK[player['highestAchievedSeasonTier']])
                 win = Weights.WIN[stats['win']]
 
                 important_weight = Weights.STATS["Important"]
                 very_important_weight = Weights.STATS["Very Important"]
 
-                total_damage = self.get_key_in_stats(stats,'totalDamageDealt', important_weight)
+                total_damage = (self.get_key_in_stats(stats,'totalDamageDealt', important_weight))/champion_health_average #these numbers are very high, might influence scores too much
                 total_time_crowd_control = self. get_key_in_stats(stats,'totalTimeCrowdControlDealt',important_weight)
                 longest_living_time = self.get_key_in_stats(stats, 'longestTimeSpentLiving', important_weight)
-                gold_earned = self.get_key_in_stats(stats,'goldEarned', very_important_weight) #these numbers are very high, might influence scores too much
+                #gold_earned = self.get_key_in_stats(stats,'goldEarned', very_important_weight) #can also be a huge number
                 deaths = self.get_key_in_stats(stats,'deaths', important_weight)
                 wards_placed = self.get_key_in_stats(stats,'wardsPlaced', very_important_weight)
                 turret_kills = self.get_key_in_stats(stats,'turretKills', very_important_weight)
-                gold_spent = self.get_key_in_stats(stats,'goldSpent', very_important_weight)
-                magic_damage = self.get_key_in_stats(stats,'magicDamageDealt', important_weight) #can also be a huge number
+                gold_spent = (self.get_key_in_stats(stats,'goldSpent', very_important_weight))/item_price_average
+                magic_damage = self.get_key_in_stats(stats,'magicDamageDealt', important_weight)/champion_health_average #can also be a huge number
                 kills = self.get_key_in_stats(stats,'kills', important_weight)
                 double_kills = self.get_key_in_stats(stats,'doubleKills', important_weight)
                 neutral_minion_kills = self.get_key_in_stats(stats, 'neutralMinionsKilled', very_important_weight)
@@ -82,9 +80,9 @@ class PopularChampionsInRanked(MRJob):
                     if stats['firstTowerAssist']:
                         first_tower_assist = very_important_weight
 
-                utility = total_damage + total_time_crowd_control + longest_living_time + gold_earned - deaths \
-                + wards_placed + turret_kills + gold_spent + magic_damage + kills + double_kills + neutral_minion_kills \
-                + champ_level + wards_killed + total_minions_killed + wards_bought + inhibitor_kills + time_ccing + first_inhibitor_skill \
+                utility = total_damage + total_time_crowd_control + longest_living_time - deaths #+ gold_earned
+                + wards_placed + turret_kills + gold_spent + magic_damage + kills + double_kills + neutral_minion_kills
+                + champ_level + wards_killed + total_minions_killed + wards_bought + inhibitor_kills + time_ccing + first_inhibitor_skill
                 + first_blood_assist + first_blood_kill + first_tower_kill + first_tower_assist
 
                 score = utility * win * rank
@@ -97,7 +95,7 @@ class PopularChampionsInRanked(MRJob):
         util_scores = [u_s for u_s in values]
         utilities = [u[0] for u in util_scores]
         scores = [s[1] for s in util_scores]
-        champion_ids.append(champ_id)
+        champion_names.append(champ_data['data'][str(champ_id)]['name'])
         champion_scores.append(sum(scores))
         yield champ_id, [sum(utilities),sum(scores)]
 
@@ -106,10 +104,18 @@ class PopularChampionsInRanked(MRJob):
                 MRStep(reducer=self.reducer_score_plot)]
 
 
+champion_names = []
+champion_scores = []
+
+champ_data = json.load(open('champions_data.json'))
+champion_health_average = 2000
+item_price_average = 3000
+
+
 if __name__ == '__main__':
     start = time.time()
     PopularChampionsInRanked.run()
     end = time.time()
     print("Time: " + str(end - start) + " sec")
-    plt.bar(champion_ids, champion_scores)
+    plt.bar(champion_names, champion_scores)
     plt.show()
