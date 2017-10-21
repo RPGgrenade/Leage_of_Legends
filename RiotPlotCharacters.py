@@ -10,7 +10,11 @@ import string
 import RiotWeightConstants as Weights
 import json
 import math
+import numpy as np
+import matplotlib.pyplot as plt
 
+champion_ids = []
+champion_scores = []
 
 class PopularChampionsInRanked(MRJob):
 
@@ -31,7 +35,7 @@ class PopularChampionsInRanked(MRJob):
 
             players = match['participants']
             for player in players: #there are no champion repeats in ranked games
-                stats  =player['stats']
+                stats = player['stats']
                 rank = math.pow(2, Weights.RANK[player['highestAchievedSeasonTier']])
                 win = Weights.WIN[stats['win']]
 
@@ -93,6 +97,8 @@ class PopularChampionsInRanked(MRJob):
         util_scores = [u_s for u_s in values]
         utilities = [u[0] for u in util_scores]
         scores = [s[1] for s in util_scores]
+        champion_ids.append(champ_id)
+        champion_scores.append(sum(scores))
         yield champ_id, [sum(utilities),sum(scores)]
 
     def steps(self):
@@ -105,3 +111,5 @@ if __name__ == '__main__':
     PopularChampionsInRanked.run()
     end = time.time()
     print("Time: " + str(end - start) + " sec")
+    plt.bar(champion_ids, champion_scores)
+    plt.show()
