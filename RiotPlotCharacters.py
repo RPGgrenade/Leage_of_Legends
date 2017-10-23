@@ -28,16 +28,19 @@ class PopularChampionsInRanked(MRJob):
         if 'status' not in match: #error code accidentally stored if is the case
 
             teams = match['teams']
-            team_id_win = dict()
-            for team in teams:
-                team_id_win[team['teamId']] = team['win']
+            #team_id_win = dict()
+            #for team in teams:
+            #    team_id_win[team['teamId']] = team['win']
 
             players = match['participants']
             for player in players: #there are no champion repeats in ranked games
 
                 stats = player['stats']
 
-                rank = math.pow(rank_importance, Weights.RANK[player['highestAchievedSeasonTier']])
+                if 'highestAchievedSeasonTier' in player:
+                    rank = math.pow(rank_importance, Weights.RANK[player['highestAchievedSeasonTier']])
+                else:
+                    rank = 0
                 win = Weights.WIN[stats['win']]
 
                 important_weight = Weights.STATS["Important"]
