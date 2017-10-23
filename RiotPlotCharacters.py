@@ -68,6 +68,11 @@ class PopularChampionsInRanked(MRJob):
                 first_tower_kill = self.get_key_in_stats(stats,'firstTowerKill', very_important_weight, True)
                 first_tower_assist = self.get_key_in_stats(stats,'firstTowerAssist', very_important_weight, True)
 
+                lane = player['timeline']['lane']
+                role = player['timeline']['role']
+
+                team_position = [lane, role]
+
                 utility = total_damage + total_time_crowd_control + longest_living_time - deaths #+ gold_earned
                 + wards_placed + turret_kills + gold_spent + magic_damage + kills + double_kills + neutral_minion_kills
                 + champ_level + wards_killed + total_minions_killed + wards_bought + inhibitor_kills + time_ccing + first_inhibitor_skill
@@ -77,13 +82,15 @@ class PopularChampionsInRanked(MRJob):
 
                 champ_id = player['championId']
 
-                yield champ_id, [utility, score]
+                yield champ_id, [utility, score, team_position]
 
     def reducer_score_plot(self, champ_id, values):
 
-        util_scores = [u_s for u_s in values]
-        utilities = [u[0] for u in util_scores]
-        scores = [s[1] for s in util_scores]
+        util_score_positions = [u_s for u_s in values]
+
+        utilities = [u[0] for u in util_score_positions]
+        scores = [s[1] for s in util_score_positions]
+        positions = [s[2] for s in util_score_positions]
 
         champion_name = champ_data['data'][str(champ_id)]['name']
 
@@ -91,8 +98,9 @@ class PopularChampionsInRanked(MRJob):
         champion_scores.append(sum(scores))
         champion_utilities.append(sum(utilities))
         champion_full_scores[champion_name] = scores
+        champion_positions[champion_name] = positions
 
-        yield champ_id, [sum(utilities),sum(scores)]
+        #yield champ_id, [sum(utilities),sum(scores)]
 
     def steps(self):
         return [MRStep(mapper=self.mapper_match_champion_scores),
@@ -103,13 +111,49 @@ def normal_distribution(champion_count):
     score_array = np.array(champion_scores)
     highest_indexes = np.argpartition(score_array, -champion_count)[-champion_count:]
     lowest_indexes = np.argpartition(score_array, champion_count)[:champion_count]
-    #indexes = np.concatenate([highest_indexes,lowest_indexes])
 
-    plot_distribution(highest_indexes, True)
-    plot_distribution(lowest_indexes, False)
+    plot_distribution(highest_indexes,champion_count, True)
+    plot_distribution(lowest_indexes, champion_count, False)
+    plot_lanes_roles(highest_indexes)
+    plot_lanes_roles(lowest_indexes)
 
 
-def plot_distribution(indexes, is_top):
+def plot_lanes_roles(indexes):
+    for index in indexes:
+        name = champion_names[index]
+        lane_roles = champion_positions[name]
+        lanes_count = dict()
+        roles_count = dict()
+        for lr in lane_roles:
+            lane = lr[0]
+            role = lr[1]
+            if lane not in lanes_count:
+                lanes_count[lane] = 1
+            else:
+                lanes_count[lane] += 1
+
+            if role not in roles_count:
+                roles_count[role] = 1
+            else:
+                roles_count[role] += 1
+
+        plot_champion_position_count(roles_count, lanes_count, name)
+
+def plot_champion_position_count(roles_data, lanes_data, name):
+    roles = list(roles_data.keys())
+    role_counts = list(roles_data.values())
+    lanes = list(lanes_data.keys())
+    lane_counts = list(lanes_data.values())
+
+    role_plot = plt.subplot(2,1,1)
+    plt.title(name + ' Roles & Lanes')
+    plt.bar(roles, role_counts)
+    lane_plot = plt.subplot(2,1,2)
+    plt.bar(lanes, lane_counts)
+    plt.show()
+
+
+def plot_distribution(indexes, count, is_top):
     for index in indexes:
         name = champion_names[index]
         scores = champion_full_scores[name]
@@ -123,9 +167,9 @@ def plot_distribution(indexes, is_top):
         plt.ylabel('probability')
         title = ''
         if is_top:
-            title = name + ' (10 Best)'
+            title = name + ' ('+ str(count) +' Best)'
         else:
-            title = name + ' (10 Worst)'
+            title = name + ' ('+ str(count) +' Worst)'
         plt.title(title)
         plt.axis([-300000000, 300000000, 0, 1000])
         plt.show()
@@ -141,6 +185,7 @@ champion_scores = []
 champion_utilities = []
 
 champion_full_scores = dict()
+champion_positions = dict()
 
 rank_importance = 7 #the higher the number the more important higher ranks are considered
 champ_data = json.load(open('champions_data.json'))
@@ -151,10 +196,9 @@ item_price_average = 3000
 if __name__ == '__main__':
     start = time.time()
     PopularChampionsInRanked.run()
+    end = time.time()
+    print("Time: " + str(end - start) + " sec")
 
     plot_character_totals(champion_scores, 'Success in Matches')
     plot_character_totals(champion_utilities, 'Individual Utility')
-    normal_distribution(10)
-
-    end = time.time()
-    print("Time: " + str(end - start) + " sec")
+    normal_distribution(3)
