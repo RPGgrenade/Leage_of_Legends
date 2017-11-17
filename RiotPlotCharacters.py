@@ -204,4 +204,4 @@ if __name__ == '__main__':
 
     plot_character_totals(champion_scores, 'Success in Matches')
     plot_character_totals(champion_utilities, 'Individual Utility')
-    normal_distribution(3)
+    normal_distribution(10)
