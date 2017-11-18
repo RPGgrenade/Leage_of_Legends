@@ -3,6 +3,7 @@ import requests
 import json
 import random
 import time
+import datetime
 from pymongo import MongoClient
 
 class RiotAPI(object):
@@ -34,9 +35,25 @@ class RiotAPI(object):
         json_data = json.load(json_file)
 
         matches_list = list(json_data['matches'])
-        match = random.choice(matches_list) #get a random match from the list
+        while True:
+            match = random.choice(matches_list) #get a random match from the list
+            is_preseason_2018 = self.is_after_date(match,2017,11,7)
+            if is_preseason_2018:
+                break
 
         self.update_random_user(match)
+
+    def is_after_date(self, match, Y, M, D):
+        try:
+            timestamp = match['gameCreation']
+        except:
+            timestamp = match['timestamp']
+        date = datetime.datetime.utcfromtimestamp(timestamp / 1000)
+        year = date.year
+        month = date.month
+        day = date.day
+        is_season = year >= Y and month >= M and day >= D
+        return is_season
 
     def update_random_user(self, match):
         users_list = list()
@@ -53,7 +70,11 @@ class RiotAPI(object):
         matches = self.get_by_id(self.accountId,type='User Matches')
         matches_list = list(matches['matches'])
         ranked_matches = self.filter_ranked(matches_list)
-        return random.choice(ranked_matches)
+        while True:
+            match = random.choice(ranked_matches)
+            if self.is_after_date(match, 2017, 11, 7):
+                break
+        return match
 
     def filter_ranked(self, matches):
         ranked = []
@@ -78,16 +99,29 @@ class RiotAPI(object):
     #5. If there are no matches to find, start from the beginning and search for another random player from the seed data file
     #6. If you get a 403 response code run previous step (not yet implemented)
 
-current_key = 'APIKEY' #Changes every day
+
+    #New strategy:
+    #1. Find summoner names for recent players, possibly top players. In order to get more valuable information
+    #2. If none are available (possible) or reach a dead end, restart using the seeding data, but only go for data with recent
+    # timestamps (using an epoch converter to know how long ago it was (no more than before Nov 7th))
+    #3. Get the newer matches this way, and keep them in their own collection of data.
+    #4. Prune it the same way afterwards.
+
+current_key = 'RGAPI-40e8ce91-9720-49ca-82d7-52176560297e' #Changes every day
 
 def main():
     client = MongoClient('localhost', 27017)
-    db = client.test_database
-    collection = db.test_collection
+    #db = client.test_database
+    #collection = db.test_collection
+    db = client.lol_database
+    collection = db.preseason_2018
     api = RiotAPI(current_key)
+
     number = random.randint(1,5)
     #number = 4
-    json_name = "matches" + str(number) + ".json"
+    #json_name = "matches" + str(number) + ".json"
+    json_name = "pro_matches.json"
+
     print("Seed " + json_name)
     api.get_random_seed(json_name)
     while True:
@@ -99,8 +133,8 @@ def main():
             match_data = api.get_by_id(api.matchId)
         print(match_data)
         data = collection.insert(match_data)
-        print(str(db.command("collstats","test_collection")["size"]/1000000000) + " GB")
-        print(str(db.test_collection.count()) + " Matches")
+        print(str(db.command("collstats","preseason_2018")["size"]/1000000000) + " GB")
+        print(str(db.preseason_2018.count()) + " Matches")
         #save it
         time.sleep(0.9)
         api.update_random_user(match_data)
