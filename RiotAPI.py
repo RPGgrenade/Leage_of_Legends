@@ -70,10 +70,14 @@ class RiotAPI(object):
         matches = self.get_by_id(self.accountId,type='User Matches')
         matches_list = list(matches['matches'])
         ranked_matches = self.filter_ranked(matches_list)
+        i = 0
         while True:
             match = random.choice(ranked_matches)
+            i += 1
             if self.is_after_date(match, 2017, 11, 7):
                 break
+            if i > 1000:
+                return None
         return match
 
     def filter_ranked(self, matches):
@@ -107,7 +111,7 @@ class RiotAPI(object):
     #3. Get the newer matches this way, and keep them in their own collection of data.
     #4. Prune it the same way afterwards.
 
-current_key = 'RGAPI-40e8ce91-9720-49ca-82d7-52176560297e' #Changes every day
+current_key = 'API' #Changes every day
 
 def main():
     client = MongoClient('localhost', 27017)

@@ -3,8 +3,8 @@ from pymongo import MongoClient
 #Only to be run to remove duplicates
 
 client = MongoClient('localhost', 27017)
-db = client.test_database
-collection = db.test_collection
+db = client.lol_database
+collection = db.preseason_2018
 collection.aggregate(
     [
         { "$sort": { "_id": 1 } },
