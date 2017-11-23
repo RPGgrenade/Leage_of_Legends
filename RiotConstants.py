@@ -2,13 +2,6 @@ URL = {
     'base':'https://{region}.api.riotgames.com/lol/{request}'
 }
 
-LANES = {
-    'TOP': 60,
-    'MIDDLE': 60,
-    'JUNGLE': 80,
-    'BOTTOM': 100
-}
-
 QUEUES = {
     'Solo-Ranked': 4,
     'Duo-Ranked': 6,

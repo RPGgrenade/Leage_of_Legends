@@ -9,6 +9,7 @@ collection.aggregate(
     [
         { "$sort": { "_id": 1 } },
         { "$group": { "_id": "$gameId", "doc": { "$first": "$$ROOT" }}},
+        #{ "$group": { "_id": "$status", "doc": { "$first": "$$ROOT" }}},
         { "$replaceRoot": { "newRoot": "$doc" }},
         { "$out": "test_collection" }
     ],

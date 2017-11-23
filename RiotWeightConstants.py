@@ -3,6 +3,13 @@ STATS = {
     "Very Important": 10
 }
 
+LANES = {
+    'TOP': 0.06,
+    'MIDDLE': 0.06,
+    'JUNGLE': 0.08,
+    'BOTTOM': 0.1
+}
+
 WIN = {
     True: 3,
     False : 1

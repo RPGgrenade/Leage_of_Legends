@@ -77,6 +77,7 @@ class RiotAPI(object):
             if self.is_after_date(match, 2017, 11, 7):
                 break
             if i > 1000:
+                print("retrying")
                 return None
         return match
 
@@ -111,7 +112,7 @@ class RiotAPI(object):
     #3. Get the newer matches this way, and keep them in their own collection of data.
     #4. Prune it the same way afterwards.
 
-current_key = 'API' #Changes every day
+current_key = 'api' #Changes every day
 
 def main():
     client = MongoClient('localhost', 27017)
@@ -140,7 +141,7 @@ def main():
         print(str(db.command("collstats","preseason_2018")["size"]/1000000000) + " GB")
         print(str(db.preseason_2018.count()) + " Matches")
         #save it
-        time.sleep(0.9)
+        time.sleep(1)
         api.update_random_user(match_data)
 
 if __name__ == '__main__':
