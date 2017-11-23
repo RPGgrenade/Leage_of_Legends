@@ -10,6 +10,15 @@ LANES = {
     'BOTTOM': 0.1
 }
 
+ROLES = {
+    'SUPPORT': 0.02,
+    'DUO_SUPPORT': 0.02,
+    'NONE': 0.02,
+    'SOLO': 0.02,
+    'DUO': 0.02,
+    'DUO_CARRY': 0.02
+}
+
 WIN = {
     True: 3,
     False : 1

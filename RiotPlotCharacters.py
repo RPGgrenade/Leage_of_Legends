@@ -7,6 +7,7 @@ import json
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import csv_data
 
 
 class PopularChampionsInRanked(MRJob):
@@ -115,8 +116,8 @@ def normal_distribution(champion_count):
     highest_indexes = np.argpartition(score_array, -champion_count)[-champion_count:]
     lowest_indexes = np.argpartition(score_array, champion_count)[:champion_count]
 
-    plot_distribution(highest_indexes,champion_count, True)
-    plot_distribution(lowest_indexes, champion_count, False)
+    #plot_distribution(highest_indexes,champion_count, True)
+    #plot_distribution(lowest_indexes, champion_count, False)
     plot_lanes_roles(highest_indexes)
     plot_lanes_roles(lowest_indexes)
 
@@ -140,7 +141,8 @@ def plot_lanes_roles(indexes):
             else:
                 roles_count[role] += 1
 
-        plot_champion_position_count(roles_count, lanes_count, name)
+        champion_strat_count[name] = {**roles_count, **lanes_count}
+        #plot_champion_position_count(roles_count, lanes_count, name)
 
 def plot_champion_position_count(roles_data, lanes_data, name):
     roles = list(roles_data.keys())
@@ -190,6 +192,8 @@ champion_utilities = []
 champion_full_scores = dict()
 champion_positions = dict()
 
+champion_strat_count = dict()
+
 rank_importance = 7 #the higher the number the more important higher ranks are considered
 champ_data = json.load(open('champions_data.json'))
 champion_health_average = 2000
@@ -202,6 +206,7 @@ if __name__ == '__main__':
     end = time.time()
     print("Time: " + str(end - start) + " sec")
 
-    plot_character_totals(champion_scores, 'Success in Matches')
-    plot_character_totals(champion_utilities, 'Individual Utility')
-    normal_distribution(10)
+    #plot_character_totals(champion_scores, 'Success in Matches')
+    #plot_character_totals(champion_utilities, 'Individual Utility')
+    normal_distribution(137)
+    csv_data.make_csv("champ_strategies_1000", champion_strat_count)

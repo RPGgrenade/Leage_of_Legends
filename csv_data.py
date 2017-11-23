@@ -1,12 +1,29 @@
-import subprocess
+import csv
 
-f = open('data.txt', 'w')
-i = 2
+def make_csv(output_name, dictionary):
+    with open(output_name + '.csv', 'w') as f:
+        w = csv.writer(f)
+        for key,value in dictionary.items():
 
-p = subprocess.Popen(["python RiotApi.py matches1.json"],
-                 stdout=subprocess.PIPE)
+            support = value.get('SUPPORT', 0)
+            duo_support = value.get('DUO_SUPPORT',0)
+            none = value.get('NONE',0)
+            solo = value.get('SOLO',0)
+            duo = value.get('DUO',0)
+            duo_carry = value.get('DUO_CARRY',0)
+            top = value.get('TOP',0)
+            middle = value.get('MIDDLE',0)
+            jungle = value.get('JUNGLE',0)
+            bottom = value.get('BOTTOM',0)
 
-for ln in p.stdout:
-    f.write(ln)
-
-f.close()
+            w.writerow([key,
+                        support,
+                        duo_support,
+                        none,
+                        solo,
+                        duo,
+                        duo_carry,
+                        top,
+                        middle,
+                        jungle,
+                        bottom])
