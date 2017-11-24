@@ -112,7 +112,7 @@ class RiotAPI(object):
     #3. Get the newer matches this way, and keep them in their own collection of data.
     #4. Prune it the same way afterwards.
 
-current_key = 'api' #Changes every day
+current_key = 'RGAPI-27c006be-1dfd-4536-9d14-ca5c33f02030' #Changes every day
 
 def main():
     client = MongoClient('localhost', 27017)

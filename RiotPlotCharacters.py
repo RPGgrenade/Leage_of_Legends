@@ -7,6 +7,7 @@ import json
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 import csv_data
 
 
@@ -23,6 +24,21 @@ class PopularChampionsInRanked(MRJob):
                     return 0
         else:
             return 0
+
+    def get_character_strategy_weight(self, champ_id, lane_role):
+        champion_name = champ_data['data'][str(champ_id)]['name']
+        try:
+            strat_numbers = champion_strat_count[champion_name]
+            lane = lane_role[0]
+            role = lane_role[1]
+            lane_number = int(strat_numbers[lane])
+            role_number = int(strat_numbers[role])
+            lane_weight = Weights.LANES[lane]
+            role_weight = Weights.ROLES[role]
+            return (lane_number*lane_weight + role_number*role_weight)
+        except:
+            return 0
+
 
     def mapper_match_champion_scores(self, _, line):
         match = json.loads(line)
@@ -76,15 +92,15 @@ class PopularChampionsInRanked(MRJob):
                 role = player['timeline']['role']
 
                 team_position = [lane, role]
+                champ_id = player['championId']
+                strategy_weight = self.get_character_strategy_weight(champ_id, team_position)
 
-                utility = total_damage + total_time_crowd_control + longest_living_time - deaths #+ gold_earned
+                utility = (total_damage + total_time_crowd_control + longest_living_time - deaths #+ gold_earned
                 + wards_placed + turret_kills + gold_spent + magic_damage + kills + double_kills + neutral_minion_kills
                 + champ_level + wards_killed + total_minions_killed + wards_bought + inhibitor_kills + time_ccing + first_inhibitor_skill
-                + first_blood_assist + first_blood_kill + first_tower_kill + first_tower_assist
+                + first_blood_assist + first_blood_kill + first_tower_kill + first_tower_assist + strategy_weight)
 
                 score = utility * win * rank
-
-                champ_id = player['championId']
 
                 yield champ_id, [utility, score, team_position]
 
@@ -104,7 +120,6 @@ class PopularChampionsInRanked(MRJob):
         champion_full_scores[champion_name] = scores
         champion_positions[champion_name] = positions
 
-        #yield champ_id, [sum(utilities),sum(scores)]
 
     def steps(self):
         return [MRStep(mapper=self.mapper_match_champion_scores),
@@ -116,8 +131,8 @@ def normal_distribution(champion_count):
     highest_indexes = np.argpartition(score_array, -champion_count)[-champion_count:]
     lowest_indexes = np.argpartition(score_array, champion_count)[:champion_count]
 
-    #plot_distribution(highest_indexes,champion_count, True)
-    #plot_distribution(lowest_indexes, champion_count, False)
+    plot_distribution(highest_indexes,champion_count, True)
+    plot_distribution(lowest_indexes, champion_count, False)
     plot_lanes_roles(highest_indexes)
     plot_lanes_roles(lowest_indexes)
 
@@ -185,6 +200,34 @@ def plot_character_totals(totals, title):
     plt.bar(champion_names, totals)
     plt.show()
 
+
+def generate_from_csv(file):
+        reader = csv.reader(file)
+        for line in reader:
+            if len(line) > 0:
+                name = line[0]
+                support = line[1]
+                duo_support = line[2]
+                none = line[3]
+                solo = line[4]
+                duo = line[5]
+                duo_carry = line[6]
+                top = line[7]
+                middle = line[8]
+                jungle = line[9]
+                bottom = line[10]
+                champion_strat_count[name] = dict()
+                champion_strat_count[name]['SUPPORT'] = support
+                champion_strat_count[name]['DUO_SUPPORT'] = duo_support
+                champion_strat_count[name]['NONE'] = none
+                champion_strat_count[name]['SOLO'] = solo
+                champion_strat_count[name]['DUO'] = duo
+                champion_strat_count[name]['DUO_CARRY'] = duo_carry
+                champion_strat_count[name]['TOP'] = top
+                champion_strat_count[name]['MIDDLE'] = middle
+                champion_strat_count[name]['JUNGLE'] = jungle
+                champion_strat_count[name]['BOTTOM'] = bottom
+
 champion_names = []
 champion_scores = []
 champion_utilities = []
@@ -202,11 +245,12 @@ item_price_average = 3000
 
 if __name__ == '__main__':
     start = time.time()
+    generate_from_csv(open("champ_strategies_preseason.csv", 'r'))
     PopularChampionsInRanked.run()
     end = time.time()
     print("Time: " + str(end - start) + " sec")
 
-    #plot_character_totals(champion_scores, 'Success in Matches')
-    #plot_character_totals(champion_utilities, 'Individual Utility')
-    normal_distribution(137)
-    csv_data.make_csv("champ_strategies_1000", champion_strat_count)
+    plot_character_totals(champion_scores, 'Success in Matches')
+    plot_character_totals(champion_utilities, 'Individual Utility')
+    normal_distribution(10)
+    #csv_data.make_csv("champ_strategies_preseason", champion_strat_count)
